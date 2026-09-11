@@ -329,7 +329,7 @@ footer{background:var(--char);position:relative;z-index:4;border-top:1px solid v
 
 <header class="bar" id="bar">
   <a class="brand" href="#top" aria-label="Chilly Corner home">
-    <span><span class="c">C</span>hilly Corner</span>
+    <span><span class="c">C</span>hilly <span class="c">C</span>orner</span>
   </a>
   <nav aria-label="Main">
     <a href="#specials-strip">Specials</a>
@@ -757,16 +757,21 @@ window.addEventListener("scroll", function(){ bar.classList.toggle("solid", wind
 (function(){
   var box = document.getElementById("heroCarousel"); if (!box) return;
   var carouselReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var slides = box.querySelectorAll(".hero-slide"), dots = box.querySelectorAll(".hero-dots button"), i = 0, timer;
+  var slides = box.querySelectorAll(".hero-slide"), dots = box.querySelectorAll(".hero-dots button"), i = 0;
   function show(n){
     i = (n + slides.length) % slides.length;
     slides.forEach(function(s, k){ s.classList.toggle("is-active", k === i); });
     dots.forEach(function(d, k){ d.classList.toggle("on", k === i); });
   }
-  function next(){ show(i + 1); }
-  function start(){ if (carouselReduce) return; clearInterval(timer); timer = setInterval(next, 1200); }
-  dots.forEach(function(d, k){ d.addEventListener("click", function(){ show(k); start(); }); });
-  start();
+  var last = 0;
+  dots.forEach(function(d, k){ d.addEventListener("click", function(){ show(k); last = performance.now(); }); });
+  if (carouselReduce || slides.length < 2) return;
+  last = performance.now();
+  function loop(now){
+    if (now - last >= 1200){ show(i + 1); last = now; }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
 })();
 
 /* ---------- 3D chillies ---------- */
