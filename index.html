@@ -84,13 +84,8 @@ img{display:block;max-width:100%}
 .hero-visual:hover .hero-frame{transform:rotateY(-3deg) rotateX(1deg)}
 .hero-photo{aspect-ratio:560/450;border-radius:24px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
 .hero-carousel{position:relative;width:100%;aspect-ratio:560/450;border-radius:24px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
-.hero-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;opacity:0;transition:opacity 1.1s ease}
+.hero-slide{position:absolute;inset:0;opacity:0;transition:opacity 1.1s ease;background-size:cover;background-position:center}
 .hero-slide.is-active{opacity:1}
-.hero-slide svg{width:5.5rem;height:5.5rem;filter:drop-shadow(0 12px 24px rgba(0,0,0,.35))}
-.hero-slide span{font-family:var(--display);font-weight:700;font-size:1.1rem;color:rgba(255,255,255,.85)}
-.slide-amber{background:radial-gradient(circle at 35% 30%,#7a4a1a,var(--char-2) 70%)}
-.slide-red{background:radial-gradient(circle at 35% 30%,#7a1f18,var(--char-2) 70%)}
-.slide-gold{background:radial-gradient(circle at 35% 30%,#6e5418,var(--char-2) 70%)}
 .hero-dots{position:absolute;left:50%;bottom:.9rem;transform:translateX(-50%);display:flex;gap:.4rem;z-index:2}
 .hero-dots button{width:.5rem;height:.5rem;border-radius:50%;border:0;background:rgba(255,255,255,.5);padding:0;cursor:pointer;transition:background-color .2s ease,transform .2s ease}
 .hero-dots button.on{background:#fff;transform:scale(1.35)}
@@ -374,11 +369,11 @@ footer{background:var(--char);position:relative;z-index:4;border-top:1px solid v
     </div>
     <div class="hero-visual">
       <div class="hero-frame load" style="animation-delay:.25s">
-        <div class="hero-carousel" id="heroCarousel" role="img" aria-label="Chilly Corner favourites: biryani, charcoal grill, chicken curry and dosa (placeholder images)">
-          <div class="hero-slide slide-amber is-active"><svg aria-hidden="true"><use href="#icon-bowl"/></svg><span>Biryani</span></div>
-          <div class="hero-slide slide-red"><svg aria-hidden="true"><use href="#icon-grill"/></svg><span>Charcoal grill</span></div>
-          <div class="hero-slide slide-red"><svg aria-hidden="true"><use href="#icon-curry"/></svg><span>Chicken curry</span></div>
-          <div class="hero-slide slide-gold"><svg aria-hidden="true"><use href="#icon-dosa"/></svg><span>Dosa</span></div>
+        <div class="hero-carousel" id="heroCarousel" role="img" aria-label="Chilly Corner favourites: biryani, charcoal grill, chicken curry and dosa (sample photos)">
+          <div class="hero-slide is-active" style="background-image:url('https://images.pexels.com/photos/34159109/pexels-photo-34159109/free-photo-of-traditional-kerala-chicken-biryani-in-clay-pot.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1400')"></div>
+          <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1601625618329-caea6f7d6fd6?fm=jpg&amp;q=75&amp;w=1400&amp;auto=format&amp;fit=crop')"></div>
+          <div class="hero-slide" style="background-image:url('https://images.pexels.com/photos/34159112/pexels-photo-34159112/free-photo-of-traditional-indian-chicken-curry-and-rice.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1400')"></div>
+          <div class="hero-slide" style="background-image:url('https://pd.w.org/2026/06/1106a246ae1179ac6.28566534-1536x1152.jpg')"></div>
           <div class="hero-dots">
             <button class="on" data-slide="0" aria-label="Show photo 1"></button>
             <button data-slide="1" aria-label="Show photo 2"></button>
@@ -591,8 +586,19 @@ function refreshSizes(id){
    in place — everything below already knows how to use them (it.img / cat.banner). */
 var USE_REAL_PHOTOS = false;
 
-/* One representative icon per menu category — reliable stand-ins that render with
-   zero network calls, until real photography replaces them. */
+/* Free, non-watermarked sample photos (Pexels / Unsplash / WordPress Photos CC0) for the
+   categories with a solid match. These are placeholders until Chilly Corner's own dish
+   photos are ready — swap per item via it.img, or per category via cat.banner. */
+var STOCK_PHOTOS = {
+  grill: "https://images.unsplash.com/photo-1601625618329-caea6f7d6fd6?fm=jpg&q=75&w=1400&auto=format&fit=crop",
+  lunch: "https://images.pexels.com/photos/34159109/pexels-photo-34159109/free-photo-of-traditional-kerala-chicken-biryani-in-clay-pot.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  chicken: "https://images.pexels.com/photos/34159112/pexels-photo-34159112/free-photo-of-traditional-indian-chicken-curry-and-rice.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  beef: "https://images.pexels.com/photos/2181151/pexels-photo-2181151.jpeg?auto=compress&cs=tinysrgb&w=1400",
+  breakfast: "https://pd.w.org/2026/06/1106a246ae1179ac6.28566534-1536x1152.jpg"
+};
+
+/* One representative icon per menu category — reliable stand-ins for categories that
+   don't have a stock photo match yet, so nothing ever shows blank. */
 var CATEGORY_ICON = {
   grill:"icon-grill", lunch:"icon-bowl", chicken:"icon-curry", beef:"icon-curry",
   seafood:"icon-fish", veg:"icon-veg", specials:"icon-snack", noodles:"icon-noodles",
@@ -603,10 +609,14 @@ function iconTileHTML(catId, label, cls){
   var id = CATEGORY_ICON[catId] || "icon-bowl";
   return '<div class="' + cls + '" role="img" aria-label="' + esc(label) + ' (placeholder image)"><svg aria-hidden="true"><use href="#' + id + '"/></svg></div>';
 }
+function photoOrIconHTML(catId, label, cls){
+  if (STOCK_PHOTOS[catId]) return '<div class="' + cls + '" style="background-image:url(\'' + STOCK_PHOTOS[catId] + '\');background-size:cover;background-position:center" role="img" aria-label="' + esc(label) + ' (sample photo)"></div>';
+  return iconTileHTML(catId, label, cls);
+}
 
 document.getElementById("rail").innerHTML = SIGNATURE.map(function(no){
   var it = ITEMS[String(no)];
-  var photo = (USE_REAL_PHOTOS && it.img) ? '<div class="ph" style="' + cropCSS(it.img) + '" role="img" aria-label="' + esc(it.name) + '"></div>' : iconTileHTML(it.cat.id, it.name, "icon-tile card-icon");
+  var photo = (USE_REAL_PHOTOS && it.img) ? '<div class="ph" style="' + cropCSS(it.img) + '" role="img" aria-label="' + esc(it.name) + '"></div>' : photoOrIconHTML(it.cat.id, it.name, "icon-tile card-icon");
   return '<article class="card">' + photo + '<div class="body"><h3>' + esc(it.name) + '</h3><p>' + esc(it.note) + '</p>' + sizesHTML(it) + '</div></article>';
 }).join("");
 document.querySelectorAll("[data-rail]").forEach(function(b){
@@ -615,11 +625,12 @@ document.querySelectorAll("[data-rail]").forEach(function(b){
 
 function bannerHTML(cat){
   if (USE_REAL_PHOTOS && cat.banner) return '<div class="ph cat-banner" style="' + cropCSS(cat.banner) + '" aria-hidden="true"></div>';
+  if (STOCK_PHOTOS[cat.id]) return '<div class="cat-banner" style="background-image:url(\'' + STOCK_PHOTOS[cat.id] + '\');background-size:cover;background-position:center" aria-hidden="true"></div>';
   return iconTileHTML(cat.id, cat.name, "cat-banner-icon");
 }
 function itemPhotoHTML(it){
   if (USE_REAL_PHOTOS && it.img) return '<div class="ph" style="' + cropCSS(it.img) + '" role="img" aria-label="' + esc(it.name) + '"></div>';
-  return iconTileHTML(it.cat.id, it.name, "icon-tile");
+  return photoOrIconHTML(it.cat.id, it.name, "icon-tile");
 }
 var catsEl = document.getElementById("cats");
 catsEl.innerHTML = MENU.map(function(cat){
